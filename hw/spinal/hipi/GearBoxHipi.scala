@@ -5,8 +5,8 @@ import spinal.sim._
 import spinal.lib._
 import scala.collection.mutable._
 case class GearBoxGenerics(symbolBitWidth:Int,inSymbolWidth:Int,outSymbolWidth:Int) {
-  //require(inSymbolWidth >= outSymbolWidth)
-  //require(inSymbolWidth < 2*outSymbolWidth)
+   require(inSymbolWidth  < 2*outSymbolWidth)
+   require(outSymbolWidth < 2*inSymbolWidth)
   val buffSymbolWidth = inSymbolWidth + outSymbolWidth -1
 }
 
@@ -31,9 +31,6 @@ case class GearBoxBus(cfg: GearBoxGenerics) extends Bundle {
       }
       println(ptrList)
       that.bus := this.bus
-      //for(index <- ptrList) {
-      //    that.bus(writePtr + index) := data(index)
-      //}
       switch(ptr){
         for(index <- ptrList){
           is(index){
@@ -106,11 +103,11 @@ case class GearBox(cfg:GearBoxGenerics) extends Component{
 
 object Test extends App{
   //SpinalVerilog(GearBox(GearBoxGenerics(8,6,5)))
-  SpinalConfig(anonymSignalPrefix = "tempz").generateVerilog(GearBox(GearBoxGenerics(8,2,3)))
+  SpinalConfig(anonymSignalPrefix = "tempz").generateVerilog(GearBox(GearBoxGenerics(8,5,3)))
 }
 object TestSim extends App {
    SimConfig.withConfig(SpinalConfig(anonymSignalPrefix = "tempz"))
-     .withWave.compile(GearBox(GearBoxGenerics(8,2,3))).doSim { dut =>
+     .withWave.compile(GearBox(GearBoxGenerics(8,5,3))).doSim { dut =>
      dut.clockDomain.forkStimulus(period = 10)
      for (a <- 0 to 7) {
        // Apply input
