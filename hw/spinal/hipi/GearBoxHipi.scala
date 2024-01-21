@@ -15,6 +15,7 @@ case class GearBoxBus(cfg: GearBoxGenerics) extends Bundle {
      val bus        = Vec(Bits(symbolBitWidth bits),buffSymbolWidth)
      val ptr        = UInt(log2Up(buffSymbolWidth)    bits)
      val occupyNum  = UInt(log2Up(buffSymbolWidth) +1 bits)
+     def alignSyn   = (ptr === inSymbolWidth)
 
     def push(data:Vec[Bits]) : GearBoxBus ={
       val that     = GearBoxBus(cfg)
@@ -66,6 +67,7 @@ case class GearBox(cfg:GearBoxGenerics) extends Component{
    val io = new Bundle{
       val streamDataIn  = slave  Stream(Bits(symbolBitWidth*inSymbolWidth bits))
       val streamDataOut = master Stream(Bits(symbolBitWidth*outSymbolWidth bits))
+      val streamDataOutAlignSync = out Bool()
    }
   noIoPrefix()
   //ClockDomain.current.reset.setName("rstn")
@@ -73,6 +75,9 @@ case class GearBox(cfg:GearBoxGenerics) extends Component{
   val regVecBus = Reg(GearBoxBus(cfg))
   val regVecBusOccupyNum = regVecBus.occupyNum
   val regVecBusFreeNum   = regVecBus.bus.length - regVecBus.occupyNum
+  val regVecBusAlignSyn  = regVecBus.alignSyn
+  io.streamDataOutAlignSync :=  regVecBusAlignSyn
+
 
   regVecBus.bus.foreach(_.init(0))
   regVecBus.ptr.init(0)
