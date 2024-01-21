@@ -41,8 +41,8 @@ case class GearBoxBus(cfg: GearBoxGenerics) extends Bundle {
           }
         }
       }
-      that.ptr      := this.ptr       + inSymbolWidth
-      that.occupyNum:= this.occupyNum + inSymbolWidth
+      that.ptr      := this.ptr       +| inSymbolWidth
+      that.occupyNum:= this.occupyNum +| inSymbolWidth
       that
     }
 
@@ -56,8 +56,8 @@ case class GearBoxBus(cfg: GearBoxGenerics) extends Bundle {
           that.bus(index ).clearAll()
         }
       }
-      that.ptr      := this.ptr        - outSymbolWidth
-      that.occupyNum:= this.occupyNum  - outSymbolWidth
+      that.ptr      := this.ptr        -| outSymbolWidth
+      that.occupyNum:= this.occupyNum  -| outSymbolWidth
       that
     }
 }
@@ -65,8 +65,9 @@ case class GearBoxBus(cfg: GearBoxGenerics) extends Bundle {
 case class GearBox(cfg:GearBoxGenerics) extends Component{
    import cfg._
    val io = new Bundle{
-      val streamDataIn  = slave  Stream(Bits(symbolBitWidth*inSymbolWidth bits))
-      val streamDataOut = master Stream(Bits(symbolBitWidth*outSymbolWidth bits))
+      val streamDataIn           = slave  Stream(Bits(symbolBitWidth*inSymbolWidth bits))
+      val streamDataInAligSync   = in Bool()
+      val streamDataOut          = master Stream(Bits(symbolBitWidth*outSymbolWidth bits))
       val streamDataOutAlignSync = out Bool()
    }
   noIoPrefix()
@@ -94,13 +95,25 @@ case class GearBox(cfg:GearBoxGenerics) extends Component{
   }
 
   io.streamDataIn.ready    := False
-  when(io.streamDataOut.ready){
-    io.streamDataIn.ready := (regVecBusFreeNum +| outSymbolWidth >= inSymbolWidth)? True | False;
-  }otherwise {
-    io.streamDataIn.ready := (regVecBusFreeNum                   >= inSymbolWidth)? True | False;
+  when(io.streamDataInAligSync){
+    when(io.streamDataOut.ready) {
+      io.streamDataIn.ready := (regVecBusOccupyNum <= outSymbolWidth) ? True | False;
+    } otherwise {
+      io.streamDataIn.ready := (regVecBusOccupyNum === 0            ) ? True | False;
+    }
+  }.otherwise {
+    when(io.streamDataOut.ready) {
+      io.streamDataIn.ready := (regVecBusFreeNum +| outSymbolWidth >= inSymbolWidth) ? True | False;
+    } otherwise {
+      io.streamDataIn.ready := (regVecBusFreeNum >= inSymbolWidth) ? True | False;
+    }
   }
 
-  io.streamDataOut.valid  := (regVecBusOccupyNum                 >= outSymbolWidth)? True | False;
+  when(io.streamDataInAligSync){
+    io.streamDataOut.valid  := (regVecBusOccupyNum  =/= 0            )? True | False;
+  }.otherwise{
+    io.streamDataOut.valid  := (regVecBusOccupyNum  >= outSymbolWidth)? True | False;
+  }
 
   io.streamDataOut.payload:= regVecBus.bus.take(outSymbolWidth).asBits()
 
@@ -119,6 +132,7 @@ object TestSim extends App {
        dut.clockDomain.waitRisingEdge()
        dut.io.streamDataIn.payload.randomize()
        dut.io.streamDataIn.valid   #= true
+       dut.io.streamDataInAligSync   #= true
        dut.io.streamDataOut.ready   #= true
        // Wait for a simulation time unit
      }
