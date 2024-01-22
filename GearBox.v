@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.10.0    git head : 270018552577f3bb8e5339ee2583c9c22d324215
 // Component : GearBox
-// Git hash  : e88ec0308ff16a92e723f2b69c0444b479dc6ef0
+// Git hash  : 809f39c32be9e713aa9aebb67f31087e4c0addbf
 
 `timescale 1ns/1ps
 
@@ -49,7 +49,7 @@ module GearBox (
   wire                regVecBusAlignSyn;
   wire                streamDataIn_fire;
   wire                streamDataOut_fire;
-  wire                when_GearBoxHipi_l81;
+  wire                when_GearBoxHipi_l86;
   wire       [2:0]    tempz_when_UInt_l120;
   wire       [3:0]    tempz_when_UInt_l129;
   reg        [2:0]    tempz_when_UInt_l120_1;
@@ -117,7 +117,7 @@ module GearBox (
   assign streamDataOutAlignSync = regVecBusAlignSyn;
   assign streamDataIn_fire = (streamDataIn_valid && streamDataIn_ready);
   assign streamDataOut_fire = (streamDataOut_valid && streamDataOut_ready);
-  assign when_GearBoxHipi_l81 = (streamDataIn_fire && streamDataOut_fire);
+  assign when_GearBoxHipi_l86 = (streamDataIn_fire && streamDataOut_fire);
   assign tempz_when_UInt_l129 = ({1'b0,regVecBus_ptr} - tempz_tempz_when_UInt_l129);
   assign when_UInt_l129 = tempz_when_UInt_l129[3];
   always @(*) begin
@@ -449,7 +449,7 @@ module GearBox (
       regVecBus_ptr <= 3'b000;
       regVecBus_occupyNum <= 4'b0000;
     end else begin
-      if(when_GearBoxHipi_l81) begin
+      if(when_GearBoxHipi_l86) begin
         regVecBus_bus_0 <= tempz_regVecBus_bus_0;
         regVecBus_bus_1 <= tempz_regVecBus_bus_1;
         regVecBus_bus_2 <= tempz_regVecBus_bus_2;

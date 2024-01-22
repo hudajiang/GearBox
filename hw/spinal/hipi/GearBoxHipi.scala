@@ -8,6 +8,7 @@ case class GearBoxGenerics(symbolBitWidth:Int,inSymbolWidth:Int,outSymbolWidth:I
    require(inSymbolWidth  < 2*outSymbolWidth)
    require(outSymbolWidth < 2*inSymbolWidth)
   val buffSymbolWidth = inSymbolWidth + outSymbolWidth -1
+  val TypeIsEnGear    = (inSymbolWidth > outSymbolWidth)
 }
 
 case class GearBoxBus(cfg: GearBoxGenerics) extends Bundle {
@@ -15,9 +16,9 @@ case class GearBoxBus(cfg: GearBoxGenerics) extends Bundle {
      val bus        = Vec(Bits(symbolBitWidth bits),buffSymbolWidth)
      val ptr        = UInt(log2Up(buffSymbolWidth)    bits)
      val occupyNum  = UInt(log2Up(buffSymbolWidth) +1 bits)
-     def alignSyn   = (ptr === inSymbolWidth)
+     val alignSyn   = Bool()
 
-    def push(data:Vec[Bits]) : GearBoxBus ={
+    def push(data:Vec[Bits],alignSyn:Bool) : GearBoxBus ={
       val that     = GearBoxBus(cfg)
       // Calc the possible position of ptr
       val ptrList :List[Int]= (1 to  outSymbolWidth ).map{
@@ -35,6 +36,7 @@ case class GearBoxBus(cfg: GearBoxGenerics) extends Bundle {
           }
         }
       }
+      that.alignSyn := alignSyn
       that.ptr      := this.ptr       +| inSymbolWidth
       that.occupyNum:= this.occupyNum +| inSymbolWidth
       that
@@ -50,9 +52,22 @@ case class GearBoxBus(cfg: GearBoxGenerics) extends Bundle {
           that.bus(index ).clearAll()
         }
       }
-      that.ptr      := this.ptr        -| outSymbolWidth
-      that.occupyNum:= this.occupyNum  -| outSymbolWidth
-      that
+      that.alignSyn := this.alignSyn
+      if(TypeIsEnGear) {
+        that.ptr := this.ptr -| outSymbolWidth
+        that.occupyNum := this.occupyNum -| outSymbolWidth
+        that
+      }
+      else {
+        when(this.alignSyn){
+          that.ptr := 0
+          that.occupyNum := 0
+        }.otherwise {
+          that.ptr := this.ptr -| outSymbolWidth
+          that.occupyNum := this.occupyNum -| outSymbolWidth
+        }
+        that
+      }
     }
 }
 
@@ -70,18 +85,25 @@ case class GearBox(cfg:GearBoxGenerics) extends Component{
   val regVecBus = Reg(GearBoxBus(cfg))
   val regVecBusOccupyNum = regVecBus.occupyNum
   val regVecBusFreeNum   = regVecBus.bus.length - regVecBus.occupyNum
-  val regVecBusAlignSyn  = regVecBus.alignSyn
+  val regVecBusAlignSyn  = {
+    if(TypeIsEnGear) {
+      regVecBus.alignSyn & (regVecBus.occupyNum <= outSymbolWidth)
+    } else {
+      False
+    }
+  }
   io.streamDataOutAlignSync :=  regVecBusAlignSyn
 
 
   regVecBus.bus.foreach(_.init(0))
   regVecBus.ptr.init(0)
   regVecBus.occupyNum.init(0)
+  regVecBus.alignSyn.init(False)
 
   when(io.streamDataIn.fire & io.streamDataOut.fire){
-    regVecBus := regVecBus.pop().push(vecIn)
+    regVecBus := regVecBus.pop().push(vecIn,io.streamDataInAligSync)
   }.elsewhen(io.streamDataIn.fire){
-    regVecBus := regVecBus.push(vecIn)
+    regVecBus := regVecBus.push(vecIn,io.streamDataInAligSync)
   }.elsewhen(io.streamDataOut.fire){
     regVecBus := regVecBus.pop()
   }.otherwise{
@@ -89,11 +111,17 @@ case class GearBox(cfg:GearBoxGenerics) extends Component{
   }
 
   io.streamDataIn.ready    := False
-  when(io.streamDataInAligSync){
-    when(io.streamDataOut.ready) {
-      io.streamDataIn.ready := (regVecBusOccupyNum <= outSymbolWidth) ? True | False;
-    } otherwise {
-      io.streamDataIn.ready := (regVecBusOccupyNum === 0            ) ? True | False;
+  when(regVecBus.alignSyn) {
+    if (TypeIsEnGear) {
+      when(io.streamDataOut.ready) {
+        io.streamDataIn.ready := (regVecBusOccupyNum <= outSymbolWidth) ? True | False;
+      } otherwise {
+        io.streamDataIn.ready := (regVecBusOccupyNum === 0) ? True | False;
+      }
+    } else {
+      when(io.streamDataOut.ready) {
+        io.streamDataIn.ready := True | False;
+      }
     }
   }.otherwise {
     when(io.streamDataOut.ready) {
@@ -103,7 +131,7 @@ case class GearBox(cfg:GearBoxGenerics) extends Component{
     }
   }
 
-  when(io.streamDataInAligSync){
+  when(regVecBus.alignSyn){
     io.streamDataOut.valid  := (regVecBusOccupyNum  =/= 0            )? True | False;
   }.otherwise{
     io.streamDataOut.valid  := (regVecBusOccupyNum  >= outSymbolWidth)? True | False;
@@ -116,20 +144,4 @@ case class GearBox(cfg:GearBoxGenerics) extends Component{
 object Test extends App{
   //SpinalVerilog(GearBox(GearBoxGenerics(8,6,5)))
   SpinalConfig(anonymSignalPrefix = "tempz").generateVerilog(GearBox(GearBoxGenerics(8,5,3)))
-}
-object TestSim extends App {
-   SimConfig.withConfig(SpinalConfig(anonymSignalPrefix = "tempz"))
-     .withWave.compile(GearBox(GearBoxGenerics(8,5,3))).doSim { dut =>
-     dut.clockDomain.forkStimulus(period = 10)
-     for (a <- 0 to 7) {
-       // Apply input
-       dut.clockDomain.waitRisingEdge()
-       dut.io.streamDataIn.payload.randomize()
-       dut.io.streamDataIn.valid   #= true
-       dut.io.streamDataInAligSync   #= true
-       dut.io.streamDataOut.ready   #= true
-       // Wait for a simulation time unit
-     }
-   }
-
 }
