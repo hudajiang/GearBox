@@ -19,18 +19,12 @@ case class GearBoxBus(cfg: GearBoxGenerics) extends Bundle {
 
     def push(data:Vec[Bits]) : GearBoxBus ={
       val that     = GearBoxBus(cfg)
-      val ptrList = ListBuffer[Int]()
-      var inwidth = inSymbolWidth
-      val outwidth = outSymbolWidth
-      var delta = 0
-      println(delta)
-      while(!ptrList.contains(delta)){
-        ptrList.append(delta)
-        delta = inwidth % outwidth
-        println(inwidth,outwidth,delta)
-        inwidth = inwidth + inSymbolWidth
-      }
+      // Calc the possible position of ptr
+      val ptrList :List[Int]= (1 to  outSymbolWidth ).map{
+        x => (x * inSymbolWidth) % outSymbolWidth
+      }.toList.distinct
       println(ptrList)
+
       that.bus := this.bus
       switch(ptr){
         for(index <- ptrList){

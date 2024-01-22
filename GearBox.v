@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.10.0    git head : 270018552577f3bb8e5339ee2583c9c22d324215
 // Component : GearBox
-// Git hash  : 95ab7f53b24528854555e7f4cd176432085c71e0
+// Git hash  : e88ec0308ff16a92e723f2b69c0444b479dc6ef0
 
 `timescale 1ns/1ps
 
@@ -49,7 +49,7 @@ module GearBox (
   wire                regVecBusAlignSyn;
   wire                streamDataIn_fire;
   wire                streamDataOut_fire;
-  wire                when_GearBoxHipi_l87;
+  wire                when_GearBoxHipi_l81;
   wire       [2:0]    tempz_when_UInt_l120;
   wire       [3:0]    tempz_when_UInt_l129;
   reg        [2:0]    tempz_when_UInt_l120_1;
@@ -117,7 +117,7 @@ module GearBox (
   assign streamDataOutAlignSync = regVecBusAlignSyn;
   assign streamDataIn_fire = (streamDataIn_valid && streamDataIn_ready);
   assign streamDataOut_fire = (streamDataOut_valid && streamDataOut_ready);
-  assign when_GearBoxHipi_l87 = (streamDataIn_fire && streamDataOut_fire);
+  assign when_GearBoxHipi_l81 = (streamDataIn_fire && streamDataOut_fire);
   assign tempz_when_UInt_l129 = ({1'b0,regVecBus_ptr} - tempz_tempz_when_UInt_l129);
   assign when_UInt_l129 = tempz_when_UInt_l129[3];
   always @(*) begin
@@ -153,11 +153,11 @@ module GearBox (
   always @(*) begin
     tempz_regVecBus_bus_1 = regVecBus_bus_4;
     case(tempz_when_UInt_l120)
-      3'b000 : begin
-        tempz_regVecBus_bus_1 = vecIn_1;
-      end
       3'b001 : begin
         tempz_regVecBus_bus_1 = vecIn_0;
+      end
+      3'b000 : begin
+        tempz_regVecBus_bus_1 = vecIn_1;
       end
       default : begin
       end
@@ -167,14 +167,14 @@ module GearBox (
   always @(*) begin
     tempz_regVecBus_bus_2 = regVecBus_bus_5;
     case(tempz_when_UInt_l120)
-      3'b000 : begin
-        tempz_regVecBus_bus_2 = vecIn_2;
-      end
       3'b010 : begin
         tempz_regVecBus_bus_2 = vecIn_0;
       end
       3'b001 : begin
         tempz_regVecBus_bus_2 = vecIn_1;
+      end
+      3'b000 : begin
+        tempz_regVecBus_bus_2 = vecIn_2;
       end
       default : begin
       end
@@ -184,14 +184,14 @@ module GearBox (
   always @(*) begin
     tempz_regVecBus_bus_3 = regVecBus_bus_6;
     case(tempz_when_UInt_l120)
-      3'b000 : begin
-        tempz_regVecBus_bus_3 = vecIn_3;
-      end
       3'b010 : begin
         tempz_regVecBus_bus_3 = vecIn_1;
       end
       3'b001 : begin
         tempz_regVecBus_bus_3 = vecIn_2;
+      end
+      3'b000 : begin
+        tempz_regVecBus_bus_3 = vecIn_3;
       end
       default : begin
       end
@@ -201,14 +201,14 @@ module GearBox (
   always @(*) begin
     tempz_regVecBus_bus_4 = 8'h00;
     case(tempz_when_UInt_l120)
-      3'b000 : begin
-        tempz_regVecBus_bus_4 = vecIn_4;
-      end
       3'b010 : begin
         tempz_regVecBus_bus_4 = vecIn_2;
       end
       3'b001 : begin
         tempz_regVecBus_bus_4 = vecIn_3;
+      end
+      3'b000 : begin
+        tempz_regVecBus_bus_4 = vecIn_4;
       end
       default : begin
       end
@@ -274,11 +274,11 @@ module GearBox (
   always @(*) begin
     tempz_regVecBus_bus_1_1 = regVecBus_bus_1;
     case(regVecBus_ptr)
-      3'b000 : begin
-        tempz_regVecBus_bus_1_1 = vecIn_1;
-      end
       3'b001 : begin
         tempz_regVecBus_bus_1_1 = vecIn_0;
+      end
+      3'b000 : begin
+        tempz_regVecBus_bus_1_1 = vecIn_1;
       end
       default : begin
       end
@@ -288,14 +288,14 @@ module GearBox (
   always @(*) begin
     tempz_regVecBus_bus_2_1 = regVecBus_bus_2;
     case(regVecBus_ptr)
-      3'b000 : begin
-        tempz_regVecBus_bus_2_1 = vecIn_2;
-      end
       3'b010 : begin
         tempz_regVecBus_bus_2_1 = vecIn_0;
       end
       3'b001 : begin
         tempz_regVecBus_bus_2_1 = vecIn_1;
+      end
+      3'b000 : begin
+        tempz_regVecBus_bus_2_1 = vecIn_2;
       end
       default : begin
       end
@@ -305,14 +305,14 @@ module GearBox (
   always @(*) begin
     tempz_regVecBus_bus_3_1 = regVecBus_bus_3;
     case(regVecBus_ptr)
-      3'b000 : begin
-        tempz_regVecBus_bus_3_1 = vecIn_3;
-      end
       3'b010 : begin
         tempz_regVecBus_bus_3_1 = vecIn_1;
       end
       3'b001 : begin
         tempz_regVecBus_bus_3_1 = vecIn_2;
+      end
+      3'b000 : begin
+        tempz_regVecBus_bus_3_1 = vecIn_3;
       end
       default : begin
       end
@@ -322,14 +322,14 @@ module GearBox (
   always @(*) begin
     tempz_regVecBus_bus_4_1 = regVecBus_bus_4;
     case(regVecBus_ptr)
-      3'b000 : begin
-        tempz_regVecBus_bus_4_1 = vecIn_4;
-      end
       3'b010 : begin
         tempz_regVecBus_bus_4_1 = vecIn_2;
       end
       3'b001 : begin
         tempz_regVecBus_bus_4_1 = vecIn_3;
+      end
+      3'b000 : begin
+        tempz_regVecBus_bus_4_1 = vecIn_4;
       end
       default : begin
       end
@@ -449,7 +449,7 @@ module GearBox (
       regVecBus_ptr <= 3'b000;
       regVecBus_occupyNum <= 4'b0000;
     end else begin
-      if(when_GearBoxHipi_l87) begin
+      if(when_GearBoxHipi_l81) begin
         regVecBus_bus_0 <= tempz_regVecBus_bus_0;
         regVecBus_bus_1 <= tempz_regVecBus_bus_1;
         regVecBus_bus_2 <= tempz_regVecBus_bus_2;
