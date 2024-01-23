@@ -89,7 +89,7 @@ case class GearBox(cfg:GearBoxGenerics) extends Component{
     if(TypeIsEnGear) {
       regVecBus.alignSyn & (regVecBus.occupyNum <= outSymbolWidth)
     } else {
-      False
+      regVecBus.alignSyn
     }
   }
   io.streamDataOutAlignSync :=  regVecBusAlignSyn
