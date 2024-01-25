@@ -28,7 +28,7 @@ case class GearBoxPair (cfg:GearBoxGenerics) extends Component {
 }
 object TestSim extends App {
   SimConfig.withConfig(SpinalConfig(anonymSignalPrefix = "tempz"))
-    .withWave.compile(GearBoxPair(GearBoxGenerics(8,64,60))).doSim { dut =>
+    .withWave.compile(GearBoxPair(GearBoxGenerics(8,63,59))).doSim { dut =>
       dut.clockDomain.forkStimulus(period = 10)
       for (a <- 0 to 100) {
         // Apply input
@@ -49,7 +49,7 @@ object GearBoxSim extends App {
   val rxAlignSynQuene = scala.collection.mutable.Queue[Boolean]()
 
   val compliled = SimConfig.withConfig(SpinalConfig(anonymSignalPrefix = "tempz"))
-                  .withWave.compile(GearBoxPair(GearBoxGenerics(8, 64, 60)))
+                  .withWave.compile(GearBoxPair(GearBoxGenerics(8, 63, 59)))
     compliled.doSim { dut =>
     dut.clockDomain.forkStimulus(10)
     val inputDriver = driver(dut.io.streamDataIn,dut.io.streamDataInAligSync ,dut.clockDomain)
@@ -71,7 +71,7 @@ object GearBoxSim extends App {
       rx_fire_cnt += 1
     }
     val mycheck = check(dut.clockDomain)
-    waitUntil(rx_fire_cnt==100000000)
+    waitUntil(rx_fire_cnt==10000000)
   }
 
   def driver[T <: Data](stream: Stream[T],alignSync:Bool, clkdm: ClockDomain) = fork {

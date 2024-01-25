@@ -26,16 +26,33 @@ case class GearBoxBus(cfg: GearBoxGenerics) extends Bundle {
       }.toList.distinct
       println(ptrList)
 
-      that.bus := this.bus
-      switch(ptr){
-        for(index <- ptrList){
-          is(index){
-            for( i<- 0 until inSymbolWidth){
-                 that.bus(index + i) := data(i)
+      //that.bus := this.bus
+      //switch(ptr){
+      //  for(index <- ptrList){
+      //    is(index){
+      //      for( i<- 0 until inSymbolWidth){
+      //           that.bus(index + i) := data(i)
+      //      }
+      //    }
+      //  }
+      //}
+
+      for(i <- 0 until buffSymbolWidth){
+        switch(ptr){
+          for(index <- ptrList){
+            is(index){
+              if( (i>= index) &&  (i < index + inSymbolWidth)){
+                that.bus(i) := data(i-index)
+              }
+              else {
+                that.bus(i) := this.bus(i)
+              }
             }
           }
+          default{that.bus(i) := this.bus(i) }
         }
       }
+
       that.alignSyn := alignSyn
       that.ptr      := this.ptr       +| inSymbolWidth
       that.occupyNum:= this.occupyNum +| inSymbolWidth
