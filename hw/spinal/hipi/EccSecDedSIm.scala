@@ -26,12 +26,12 @@ case class EccPair (cfg:EccGenerics) extends Component {
 
 object EccSim extends App {
   val compliled = SimConfig.withConfig(SpinalConfig(anonymSignalPrefix = "tempz"))
-    .withWave.compile(EccPair(EccGenerics(11, 5)))
+    .withWave.compile(EccPair(EccGenerics(246, 9)))
   compliled.doSim { dut =>
     dut.clockDomain.forkStimulus(10)
     for (cnt <- 0 to 1000) {
       dut.io.dataIn.randomize()
-      dut.io.bus#= 1<<cnt%(dut.cfg.dataWith + dut.cfg.parityWidth)
+      dut.io.bus#= 1.toBigInt<<cnt%(dut.cfg.dataWith + dut.cfg.parityWidth)
       sleep(1)
       assert(dut.io.dataIn.toBigInt == dut.io.dataOut.toBigInt)
     }
