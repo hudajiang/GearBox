@@ -26,17 +26,6 @@ case class GearBoxBus(cfg: GearBoxGenerics) extends Bundle {
       }.toList.distinct
       println(ptrList)
 
-      //that.bus := this.bus
-      //switch(ptr){
-      //  for(index <- ptrList){
-      //    is(index){
-      //      for( i<- 0 until inSymbolWidth){
-      //           that.bus(index + i) := data(i)
-      //      }
-      //    }
-      //  }
-      //}
-
       for(i <- 0 until buffSymbolWidth){
         switch(ptr){
           for(index <- ptrList){
@@ -104,7 +93,8 @@ case class GearBox(cfg:GearBoxGenerics) extends Component{
   val regVecBusFreeNum   = regVecBus.bus.length - regVecBus.occupyNum
   val regVecBusAlignSyn  = {
     if(TypeIsEnGear) {
-      regVecBus.alignSyn & (regVecBus.occupyNum <= outSymbolWidth)
+      (regVecBus.alignSyn & (regVecBus.occupyNum <= outSymbolWidth)) |
+        (regVecBus.occupyNum < outSymbolWidth)
     } else {
       regVecBus.alignSyn
     }
@@ -128,34 +118,49 @@ case class GearBox(cfg:GearBoxGenerics) extends Component{
   }
 
   io.streamDataIn.ready    := False
-  when(regVecBus.alignSyn) {
-    if (TypeIsEnGear) {
+  if(TypeIsEnGear) {
+    when(regVecBus.alignSyn) {
       when(io.streamDataOut.ready) {
         io.streamDataIn.ready := (regVecBusOccupyNum <= outSymbolWidth) ? True | False;
       } otherwise {
         io.streamDataIn.ready := (regVecBusOccupyNum === 0) ? True | False;
       }
-    } else {
+    }.otherwise{
+      when(io.streamDataOut.ready) {
+        io.streamDataIn.ready := (regVecBusFreeNum +| outSymbolWidth >= inSymbolWidth) ? True | False;
+      } otherwise {
+        io.streamDataIn.ready := (regVecBusFreeNum >= inSymbolWidth) ? True | False;
+      }
+    }
+
+     io.streamDataOut.valid  := (regVecBusOccupyNum  =/= 0            )? True | False;
+  // when(regVecBus.alignSyn){
+  //   io.streamDataOut.valid  := (regVecBusOccupyNum  =/= 0            )? True | False;
+  // }.otherwise{
+  //   io.streamDataOut.valid  := (regVecBusOccupyNum  >= outSymbolWidth)? True | False;
+  // }
+
+  } else {
+    when(regVecBus.alignSyn) {
       when(io.streamDataOut.ready) {
         io.streamDataIn.ready := True | False;
       }
+    }.otherwise{
+      when(io.streamDataOut.ready) {
+        io.streamDataIn.ready := (regVecBusFreeNum +| outSymbolWidth >= inSymbolWidth) ? True | False;
+      } otherwise {
+        io.streamDataIn.ready := (regVecBusFreeNum >= inSymbolWidth) ? True | False;
+      }
     }
-  }.otherwise {
-    when(io.streamDataOut.ready) {
-      io.streamDataIn.ready := (regVecBusFreeNum +| outSymbolWidth >= inSymbolWidth) ? True | False;
-    } otherwise {
-      io.streamDataIn.ready := (regVecBusFreeNum >= inSymbolWidth) ? True | False;
-    }
-  }
 
-  when(regVecBus.alignSyn){
-    io.streamDataOut.valid  := (regVecBusOccupyNum  =/= 0            )? True | False;
-  }.otherwise{
-    io.streamDataOut.valid  := (regVecBusOccupyNum  >= outSymbolWidth)? True | False;
+    when(regVecBus.alignSyn){
+      io.streamDataOut.valid  := (regVecBusOccupyNum  =/= 0            )? True | False;
+    }.otherwise{
+      io.streamDataOut.valid  := (regVecBusOccupyNum  >= outSymbolWidth)? True | False;
+    }
   }
 
   io.streamDataOut.payload:= regVecBus.bus.take(outSymbolWidth).asBits()
-
 }
 
 object Test extends App{
